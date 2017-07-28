@@ -238,7 +238,9 @@ class RedisCluster
                 # TODO: use pipelining to send asking and save a rtt.
                 r.asking if asking
                 asking = false
-                return r.send(argv[0].to_sym,*argv[1..-1])
+                result = r.send(argv[0].to_sym,*argv[1..-1])
+                return yield r if block_given? # using a block, the result of the yielded stuff is important
+                return result
             rescue Errno::ECONNREFUSED, Redis::TimeoutError, Redis::CannotConnectError, Errno::EACCES
                 try_random_node = true
                 sleep(0.1) if ttl < RedisClusterRequestTTL/2
@@ -274,5 +276,17 @@ class RedisCluster
     def method_missing(*argv)
         send_cluster_command(argv)
     end
-end
 
+  def watch key
+    send_cluster_command([:watch,key]) do |con|
+      begin
+        # reuse the assigned slot
+        yield con
+      rescue StandardError => ex
+        c.unwatch
+        raise ex
+      end
+    end
+  end
+
+end
