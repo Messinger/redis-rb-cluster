@@ -116,6 +116,6 @@ else
     ]
 end
 
-rc = RedisCluster.new(startup_nodes,32,:timeout => 0.1)
+rc = Redis::Cluster.new(startup_nodes,32,:timeout => 0.1)
 tester = ConsistencyTester.new(rc)
 tester.test
