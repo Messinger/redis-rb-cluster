@@ -30,6 +30,16 @@ class Redis
       RedisClusterRequestTTL = 16
       RedisClusterDefaultTimeout = 1
 
+      class CannotCluster < RuntimeError
+        def initialize(*commands)
+          @command = commands
+        end
+
+        def message
+          "'#{@command.join(' ').to_s}' cannot executed in Redis::Cluster."
+        end
+      end
+
       def initialize(startup_nodes,connections,opt={})
           @startup_nodes = startup_nodes
           @max_connections = connections
@@ -227,7 +237,7 @@ class Redis
           while ttl > 0
               ttl -= 1
               key = get_key_from_command(argv)
-              raise "No way to dispatch this command to Redis Cluster." if !key
+              raise CannotCluster.new(argv) if key.nil?
               slot = keyslot(key)
               if try_random_node
                   r = get_random_connection
