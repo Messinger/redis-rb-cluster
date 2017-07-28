@@ -21,7 +21,7 @@
 
 require 'rubygems'
 require 'redis'
-require './crc16'
+require 'redis/crc16'
 
 class Redis
   class Cluster
