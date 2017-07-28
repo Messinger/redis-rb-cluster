@@ -289,6 +289,7 @@ class Redis
       end
 
     def watch key
+      raise CannotCluster.new "watch",*key if key.is_a? Array
       send_cluster_command([:watch,key]) do |con|
         begin
           # reuse the assigned slot
